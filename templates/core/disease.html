@@ -1,0 +1,598 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Disease Scan{% endblock %}
+{% block breadcrumb %}Disease Scan{% endblock %}
+{% block page_title %}🔬 Plant Disease Detection{% endblock %}
+
+{% block extra_css %}
+<style>
+  .disease-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 900px) {
+    .disease-layout { grid-template-columns: 1fr; }
+  }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .upload-zone:hover,
+  .upload-zone.drag-over {
+    border-color: var(--green);
+    background: rgba(76, 175, 80, 0.04);
+  }
+  .upload-zone .icon { font-size: 40px; }
+  .upload-zone p    { color: var(--text-2); margin-top: 10px; font-size: 14px; }
+  .upload-zone small{ color: var(--text-3); font-size: 12px; }
+
+  #preview-img {
+    max-width: 100%;
+    max-height: 220px;
+    border-radius: 10px;
+    margin-top: 12px;
+    display: none;
+    object-fit: contain;
+    border: 1px solid var(--border);
+  }
+  #preview-container { display: none; }
+
+  .remove-btn {
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 26px; height: 26px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  /* ── Plant identity card ── */
+  .plant-identity {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .plant-emoji   { font-size: 40px; line-height: 1; }
+  .plant-info    { flex: 1; }
+  .plant-label   {
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 3px;
+  }
+  .plant-name-big {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-1);
+    line-height: 1.2;
+  }
+
+  /* ── Disease name ── */
+  .disease-name-big {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .disease-name-big.diseased { color: var(--amber); }
+  .disease-name-big.healthy  { color: var(--green); }
+
+  /* ── Confidence meter ── */
+  .conf-meter { margin: 12px 0 16px; }
+  .conf-meter-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-3);
+    margin-bottom: 5px;
+  }
+  .conf-meter-bar {
+    height: 8px;
+    background: var(--bg-0);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .conf-meter-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ── Top-3 table ── */
+  .top3-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .top3-table th {
+    color: var(--text-3);
+    font-weight: 500;
+    text-align: left;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .top3-table td {
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .top3-table tr:last-child td { border-bottom: none; }
+
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+  .rank-1 { background: var(--green-d); color: #fff; }
+  .rank-2, .rank-3 { background: var(--bg-3); color: var(--text-2); }
+
+  .mini-bar {
+    height: 5px;
+    background: var(--bg-0);
+    border-radius: 3px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .mini-fill {
+    height: 100%;
+    border-radius: 3px;
+  }
+
+  /* ── Remedy button ── */
+  .remedy-btn {
+    width: 100%;
+    margin-top: 16px;
+    background: linear-gradient(135deg, var(--green-d), #1b5e20);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: opacity 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .remedy-btn:hover { opacity: 0.9; }
+
+  /* ── Placeholder ── */
+  .result-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    color: var(--text-3);
+    text-align: center;
+    gap: 10px;
+  }
+  .result-placeholder .big-icon {
+    font-size: 52px;
+    opacity: 0.4;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<p class="text-muted" style="margin-bottom: 20px;">
+  Upload a plant leaf photo. The AI will identify the
+  <strong style="color:var(--text-2);">plant species</strong> and detect any
+  <strong style="color:var(--text-2);">disease</strong> from 38 PlantVillage categories.
+</p>
+
+<div class="disease-layout">
+
+  <!-- ══ LEFT: Upload Panel ══════════════════════════════════ -->
+  <div class="card" style="display:flex; flex-direction:column; gap:0;">
+
+    <div style="font-size:16px; font-weight:700; margin-bottom:14px;">
+      📷 Upload Leaf Image
+    </div>
+
+    <div class="upload-zone" id="upload-zone">
+      <div class="icon">🍃</div>
+      <p>Drag &amp; drop, paste, or click to select</p>
+      <small>JPG · PNG · WebP · max 10 MB</small>
+    </div>
+    <input type="file" id="img-input" accept="image/*" style="display:none;" />
+
+    <!-- Preview -->
+    <div id="preview-container">
+      <div style="display:flex; align-items:flex-start; gap:10px; margin-top:12px;">
+        <img id="preview-img" alt="Leaf preview" />
+        <button class="remove-btn" onclick="removeImage()" title="Remove image">✕</button>
+      </div>
+    </div>
+
+    <!-- Scan button -->
+    <div style="display:flex; align-items:center; gap:14px; margin-top:18px;">
+      <button class="btn btn-primary" id="scan-btn" onclick="detectDisease()"
+              style="padding:11px 24px; font-size:14px;">
+        🔍 Run Disease Scan
+      </button>
+      <div class="loader" id="disease-loader"></div>
+      <span id="disease-error" style="color:var(--red); font-size:13px;"></span>
+    </div>
+
+    <!-- Tip -->
+    <div style="margin-top:16px; font-size:11px; color:var(--text-3);
+                background:var(--bg-3); border-radius:6px; padding:8px 12px;
+                line-height:1.6;">
+      💡 <strong>Tip:</strong> Use a clear, close-up photo of a single leaf
+      against a plain background for best results.
+    </div>
+
+  </div>
+
+  <!-- ══ RIGHT: Result Panel ════════════════════════════════ -->
+  <div class="card" style="overflow-y:auto;">
+
+    <!-- Placeholder shown before scan -->
+    <div id="disease-placeholder" class="result-placeholder">
+      <div class="big-icon">🌿</div>
+      <p style="font-size:15px; font-weight:500;">Awaiting Scan</p>
+      <p style="font-size:13px;">Upload an image and click "Run Disease Scan"</p>
+    </div>
+
+    <!-- Result shown after scan -->
+    <div id="disease-result" style="display:none;">
+
+      <!-- Plant identity card -->
+      <div class="plant-identity" id="plant-identity-card">
+        <div class="plant-emoji" id="plant-emoji">🌿</div>
+        <div class="plant-info">
+          <div class="plant-label">Identified Plant</div>
+          <div class="plant-name-big" id="plant-name-display">—</div>
+          <div id="plant-sub"
+               style="font-size:12px; color:var(--text-3); margin-top:3px;"></div>
+        </div>
+        <div id="health-status-icon" style="font-size:28px;"></div>
+      </div>
+
+      <!-- Disease name -->
+      <div style="margin-bottom:6px;">
+        <div class="plant-label">Detected Condition</div>
+        <div class="disease-name-big" id="disease-name-display">—</div>
+      </div>
+
+      <!-- Status badges -->
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+        <span id="plant-badge"  class="stat-badge badge-blue"></span>
+        <span id="health-badge" class="stat-badge"></span>
+        <span id="model-badge"  class="stat-badge"
+              style="background:rgba(66,165,245,0.1);
+                     color:var(--blue); font-size:11px;"></span>
+      </div>
+
+      <!-- Confidence meter -->
+      <div class="conf-meter">
+        <div class="conf-meter-label">
+          <span>Model Confidence</span>
+          <span id="conf-percent"
+                style="font-family:var(--mono); font-weight:700;">—</span>
+        </div>
+        <div class="conf-meter-bar">
+          <div class="conf-meter-fill" id="conf-fill" style="width:0%;"></div>
+        </div>
+        <div id="conf-label"
+             style="font-size:11px; margin-top:4px; color:var(--text-3);"></div>
+      </div>
+
+      <hr class="divider" style="margin:14px 0;">
+
+      <!-- Top-3 predictions -->
+      <div class="card-title" style="margin-bottom:8px;">Top 3 Predictions</div>
+      <table class="top3-table">
+        <thead>
+          <tr>
+            <th style="width:55%;">Plant &amp; Disease</th>
+            <th>Confidence</th>
+          </tr>
+        </thead>
+        <tbody id="top3-body"></tbody>
+      </table>
+
+      <!-- Remedy button -->
+      <button class="remedy-btn" onclick="openChatWithDisease()">
+        🤖 Get Remedy Advice from AgriBot
+      </button>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const DISEASE_PREDICT_URL = "{% url 'api_disease_predict' %}";
+  const AGRIBOT_URL         = "{% url 'agribot' %}";
+
+  // ── Plant emoji map ─────────────────────────────────────────
+  const PLANT_EMOJI = {
+    "Apple":"🍎","Blueberry":"🫐","Cherry":"🍒","Corn":"🌽",
+    "Grape":"🍇","Orange":"🍊","Peach":"🍑","Pepper":"🫑",
+    "Pepper_bell":"🫑","Potato":"🥔","Raspberry":"🍓",
+    "Soybean":"🌱","Squash":"🥦","Strawberry":"🍓","Tomato":"🍅",
+    "default":"🌿",
+  };
+  function getEmoji(plant) {
+    for (const [k, v] of Object.entries(PLANT_EMOJI))
+      if (plant.toLowerCase().includes(k.toLowerCase())) return v;
+    return PLANT_EMOJI.default;
+  }
+
+  // Confidence colour helper
+  function confColor(pct) {
+    if (pct >= 70) return "var(--green)";
+    if (pct >= 40) return "var(--amber)";
+    return "var(--red)";
+  }
+  function confText(pct) {
+    if (pct >= 70) return "✅ High confidence — result is reliable";
+    if (pct >= 40) return "⚠️ Medium confidence — consider a clearer photo";
+    return "❌ Low confidence — retake photo for better accuracy";
+  }
+
+  // ── State ────────────────────────────────────────────────────
+  let selectedFile     = null;
+  let currentDiseaseId = null;
+
+  // ── Bind upload events ───────────────────────────────────────
+  const upZone = document.getElementById("upload-zone");
+  const fileIn = document.getElementById("img-input");
+
+  upZone.addEventListener("click", () => fileIn.click());
+  fileIn.addEventListener("change", e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+  upZone.addEventListener("dragover", e => {
+    e.preventDefault(); upZone.classList.add("drag-over");
+  });
+  upZone.addEventListener("dragleave", () => {
+    upZone.classList.remove("drag-over");
+  });
+  upZone.addEventListener("drop", e => {
+    e.preventDefault(); upZone.classList.remove("drag-over");
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  document.addEventListener("paste", e => {
+    const item = Array.from(e.clipboardData?.items || [])
+                      .find(i => i.type.startsWith("image/"));
+    if (item) handleFile(item.getAsFile());
+  });
+
+  // ── Handle selected / dropped file ──────────────────────────
+  function handleFile(file) {
+    const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!ALLOWED.includes(file.type)) {
+      showError("Only JPG, PNG, or WebP files are supported.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showError("File too large. Maximum size is 10 MB.");
+      return;
+    }
+    clearError();
+    selectedFile = file;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById("preview-img");
+      img.src = e.target.result;
+      img.style.display = "block";
+      document.getElementById("preview-container").style.display = "block";
+    };
+    reader.readAsDataURL(file);
+    hideResult();
+  }
+
+  // ── Remove selected image ────────────────────────────────────
+  function removeImage() {
+    selectedFile = null;
+    fileIn.value = "";
+    const img = document.getElementById("preview-img");
+    img.src = ""; img.style.display = "none";
+    document.getElementById("preview-container").style.display = "none";
+    hideResult();
+    clearError();
+  }
+
+  // ── Main inference call ──────────────────────────────────────
+  async function detectDisease() {
+    clearError();
+    if (!selectedFile) {
+      showError("Please select a leaf image first.");
+      return;
+    }
+
+    setLoading(true);
+    setPlaceholder("🔬 Analysing leaf...");
+    hideResult();
+
+    const formData = new FormData();
+    formData.append("image", selectedFile);
+
+    try {
+      const resp = await fetch(DISEASE_PREDICT_URL, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+        body: formData,
+      });
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        showError(data.error || "Scan failed. Check server logs.");
+        resetPlaceholder();
+        return;
+      }
+
+      currentDiseaseId = data.id;
+      if (currentDiseaseId)
+        sessionStorage.setItem("agribot_disease_id", currentDiseaseId);
+
+      renderResult(data);
+
+    } catch (err) {
+      showError("Network error — is the Django server running?");
+      resetPlaceholder();
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Render prediction result ─────────────────────────────────
+  function renderResult(data) {
+    const conf    = parseFloat(data.confidence);
+    const plant   = data.plant   || "Unknown Plant";
+    const disease = data.disease || "Unknown";
+    const healthy = data.is_healthy;
+    const emoji   = getEmoji(plant);
+    const color   = confColor(conf);
+
+    // Plant identity card
+    document.getElementById("plant-emoji").textContent        = emoji;
+    document.getElementById("plant-name-display").textContent = plant;
+    document.getElementById("plant-sub").textContent          =
+      healthy ? "No disease detected" : `Condition: ${disease}`;
+    document.getElementById("health-status-icon").textContent =
+      healthy ? "✅" : "⚠️";
+    document.getElementById("plant-identity-card").style.borderColor =
+      healthy ? "var(--green)" : "var(--amber)";
+
+    // Disease name
+    const diseaseEl = document.getElementById("disease-name-display");
+    diseaseEl.textContent = healthy ? "Healthy ✅" : disease;
+    diseaseEl.className   = "disease-name-big " + (healthy ? "healthy" : "diseased");
+
+    // Badges
+    document.getElementById("plant-badge").textContent  = emoji + " " + plant;
+    document.getElementById("model-badge").textContent  = data.model_used || "ViT";
+    const hb = document.getElementById("health-badge");
+    if (healthy) {
+      hb.textContent = "✅ Healthy";
+      hb.className   = "stat-badge badge-green";
+    } else {
+      hb.textContent = "⚠️ Diseased";
+      hb.className   = "stat-badge badge-amber";
+    }
+
+    // Confidence meter
+    document.getElementById("conf-percent").textContent   = conf.toFixed(1) + "%";
+    document.getElementById("conf-percent").style.color   = color;
+    document.getElementById("conf-fill").style.width      = conf + "%";
+    document.getElementById("conf-fill").style.background = color;
+    document.getElementById("conf-label").textContent     = confText(conf);
+
+    // Top-3 table
+    const tbody = document.getElementById("top3-body");
+    tbody.innerHTML = "";
+    (data.top_3 || []).forEach((item, i) => {
+      const parts = (item.disease || "").split("__");
+      const pName = (parts[0] || "").replace(/_/g, " ");
+      const dName = (parts[1] || "").replace(/_/g, " ");
+      const c     = parseFloat(item.confidence);
+      const tr    = document.createElement("tr");
+      tr.innerHTML = `
+        <td>
+          <div style="display:flex; align-items:center;">
+            <span class="rank-badge rank-${i + 1}">${i + 1}</span>
+            <div>
+              <div style="font-weight:${i === 0 ? 700 : 400};
+                          color:${i === 0 ? "var(--text-1)" : "var(--text-2)"};
+                          font-size:13px;">
+                ${getEmoji(pName)} ${pName}
+              </div>
+              <div style="font-size:11px; color:var(--text-3);">${dName}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span style="font-family:var(--mono); font-size:12px;
+                       color:${confColor(c)};
+                       font-weight:${i === 0 ? 700 : 400};">
+            ${c.toFixed(1)}%
+          </span>
+          <div class="mini-bar">
+            <div class="mini-fill"
+                 style="width:${c}%; background:${confColor(c)};"></div>
+          </div>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Show result, hide placeholder
+    document.getElementById("disease-placeholder").style.display = "none";
+    document.getElementById("disease-result").style.display      = "block";
+  }
+
+  // ── Navigate to AgriBot chat with disease context ────────────
+  function openChatWithDisease() {
+    if (currentDiseaseId)
+      sessionStorage.setItem("agribot_disease_id", currentDiseaseId);
+    window.location.href = AGRIBOT_URL;
+  }
+
+  // ── UI helpers ───────────────────────────────────────────────
+  function hideResult() {
+    document.getElementById("disease-result").style.display      = "none";
+    document.getElementById("disease-placeholder").style.display = "flex";
+    resetPlaceholder();
+  }
+  function resetPlaceholder() {
+    document.getElementById("disease-placeholder").innerHTML = `
+      <div class="big-icon">🌿</div>
+      <p style="font-size:15px; font-weight:500;">Awaiting Scan</p>
+      <p style="font-size:13px;">Upload an image and click "Run Disease Scan"</p>`;
+  }
+  function setPlaceholder(msg) {
+    document.getElementById("disease-placeholder").style.display = "flex";
+    document.getElementById("disease-placeholder").innerHTML = `
+      <div class="big-icon">🔬</div>
+      <p style="font-size:15px; font-weight:500;">${msg}</p>
+      <p style="font-size:13px; color:var(--text-3);">
+        ViT-Small/16 running inference…
+      </p>`;
+  }
+  function setLoading(on) {
+    document.getElementById("scan-btn").disabled = on;
+    document.getElementById("disease-loader").classList.toggle("show", on);
+  }
+  function showError(msg) {
+    document.getElementById("disease-error").textContent = msg;
+  }
+  function clearError() {
+    document.getElementById("disease-error").textContent = "";
+  }
+  function getCookie(name) {
+    const val   = `; ${document.cookie}`;
+    const parts = val.split(`; ${name}=`);
+    return parts.length === 2 ? parts.pop().split(";").shift() : "";
+  }
+</script>
+{% endblock %}

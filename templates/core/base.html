@@ -1,0 +1,352 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgriBot — {% block title %}Precision Agriculture{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── Design tokens ────────────────────────────────────── */
+    :root {
+      --bg-0:   #0a0f0d;   /* deepest background */
+      --bg-1:   #111a14;   /* sidebar */
+      --bg-2:   #182318;   /* cards */
+      --bg-3:   #1f2e20;   /* elevated surfaces */
+      --border: #2a3d2b;
+      --text-1: #e8f0e9;
+      --text-2: #9dba9e;
+      --text-3: #607661;
+      --green:  #4caf50;
+      --green-d:#2e7d32;
+      --amber:  #ffb300;
+      --red:    #ef5350;
+      --blue:   #42a5f5;
+      --radius: 12px;
+      --font:   'Space Grotesk', sans-serif;
+      --mono:   'JetBrains Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-0);
+      color: var(--text-1);
+      display: flex;
+      min-height: 100vh;
+      font-size: 15px;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────── */
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: var(--bg-1);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 28px 0 20px;
+      position: sticky;
+      top: 0;
+      flex-shrink: 0;
+    }
+    .sidebar-logo {
+      padding: 0 24px 28px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo .wordmark {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: -0.5px;
+    }
+    .sidebar-logo .tagline {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 3px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+    .sidebar nav { padding: 16px 12px; flex: 1; }
+    .nav-section-label {
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 0 12px;
+      margin: 20px 0 8px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: var(--text-2);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-link:hover { background: var(--bg-3); color: var(--text-1); }
+    .nav-link.active { background: var(--green-d); color: #fff; }
+    .nav-link .icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer {
+      padding: 16px 24px 0;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-3);
+    }
+
+    /* ── Main content ─────────────────────────────────────── */
+    .main { flex: 1; overflow-x: hidden; }
+
+    .topbar {
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-0);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+    .topbar .breadcrumb { font-size: 13px; color: var(--text-3); }
+
+    .content { padding: 32px; }
+
+    /* ── Cards ────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card-sm { padding: 16px 20px; }
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-1);
+      line-height: 1;
+    }
+    .stat-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .badge-green  { background: rgba(76,175,80,0.15); color: var(--green); }
+    .badge-amber  { background: rgba(255,179,0,0.15); color: var(--amber); }
+    .badge-red    { background: rgba(239,83,80,0.15);  color: var(--red);  }
+    .badge-blue   { background: rgba(66,165,245,0.15); color: var(--blue); }
+
+    /* ── Grid helpers ─────────────────────────────────────── */
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    @media (max-width: 1100px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px)  {
+      .sidebar { display: none; }
+      .grid-4, .grid-2 { grid-template-columns: 1fr; }
+      .content { padding: 20px; }
+    }
+
+    /* ── Form inputs ──────────────────────────────────────── */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+    .form-group label { display: block; font-size: 12px; color: var(--text-3); margin-bottom: 5px; font-weight: 500; letter-spacing: 0.4px; }
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-1);
+      font-family: var(--mono);
+      font-size: 14px;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus { outline: none; border-color: var(--green); }
+
+    /* ── Buttons ──────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--green); color: #000; }
+    .btn-primary:hover { background: #66bb6a; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-2); }
+    .btn-outline:hover { border-color: var(--green); color: var(--green); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Result box ───────────────────────────────────────── */
+    .result-box {
+      margin-top: 24px;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      min-height: 80px;
+      display: none;
+    }
+    .result-box.show { display: block; }
+    .result-label { font-size: 12px; color: var(--text-3); margin-bottom: 6px; }
+    .result-value { font-size: 28px; font-weight: 700; color: var(--green); }
+    .result-meta  { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+
+    /* ── Loader ───────────────────────────────────────────── */
+    .loader {
+      display: none;
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .loader.show { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Upload zone ──────────────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--green); }
+    .upload-zone p { color: var(--text-2); margin-top: 10px; font-size: 14px; }
+
+    /* ── Chat ─────────────────────────────────────────────── */
+    .chat-window {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      height: 380px;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .chat-bubble {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .chat-bubble.user     { background: var(--green-d); color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .chat-bubble.bot      { background: var(--bg-2); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 2px; }
+    .chat-bubble.typing   { color: var(--text-3); font-style: italic; }
+    .chat-input-row { display: flex; gap: 10px; margin-top: 12px; }
+    .chat-input-row input {
+      flex: 1; padding: 11px 16px;
+      background: var(--bg-3); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text-1);
+      font-family: var(--font); font-size: 14px;
+    }
+    .chat-input-row input:focus { outline: none; border-color: var(--green); }
+
+    /* ── Misc ─────────────────────────────────────────────── */
+    .section-header { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+    .text-muted { color: var(--text-3); font-size: 13px; }
+    .gap-top { margin-top: 24px; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .pill {
+      padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+      border: 1px solid var(--border); color: var(--text-2);
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Sidebar ────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="wordmark">🌱 AgriBot</div>
+    <div class="tagline">Precision Agriculture AI</div>
+  </div>
+  <nav>
+    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <span class="icon">⊞</span> Dashboard
+    </a>
+
+    <div class="nav-section-label">AI Modules</div>
+    <a href="{% url 'crop' %}" class="nav-link {% if request.resolver_match.url_name == 'crop' %}active{% endif %}">
+      <span class="icon">🌾</span> Crop Advisor
+    </a>
+    <a href="{% url 'disease' %}" class="nav-link {% if request.resolver_match.url_name == 'disease' %}active{% endif %}">
+      <span class="icon">🔬</span> Disease Scan
+    </a>
+    <a href="{% url 'agribot' %}" class="nav-link {% if request.resolver_match.url_name == 'agribot' %}active{% endif %}">
+      <span class="icon">🤖</span> AgriBot Chat
+    </a>
+
+    <div class="nav-section-label">History</div>
+    <a href="{% url 'crop_history' %}"    class="nav-link"><span class="icon">📋</span> Crop Logs</a>
+    <a href="{% url 'disease_history' %}" class="nav-link"><span class="icon">🗂</span> Disease Logs</a>
+  </nav>
+  <div class="sidebar-footer">AgriBot v1.0 · Django + TF</div>
+</aside>
+
+<!-- ── Main ───────────────────────────────────────────── -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="breadcrumb">AgriBot / {% block breadcrumb %}Dashboard{% endblock %}</div>
+      <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:12px;color:var(--text-3);">Ollama: <span id="ollama-status" style="color:var(--amber)">checking…</span></span>
+    </div>
+  </div>
+
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<script>
+// Check Ollama status
+fetch('/api/chat/', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({message: 'ping', session_id: 'health-check'})
+}).then(r => {
+  const el = document.getElementById('ollama-status');
+  if (r.ok) { el.textContent = 'online'; el.style.color = 'var(--green)'; }
+  else       { el.textContent = 'offline'; el.style.color = 'var(--red)'; }
+}).catch(() => {
+  const el = document.getElementById('ollama-status');
+  el.textContent = 'offline'; el.style.color = 'var(--red)';
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

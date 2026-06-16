@@ -1,0 +1,65 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Crop Advisor{% endblock %}
+{% block breadcrumb %}Crop Advisor{% endblock %}
+{% block page_title %}🌾 Crop Recommendation{% endblock %}
+
+{% block content %}
+<p class="text-muted" style="margin-bottom:24px;">
+  Enter your soil and climate parameters to receive an AI-powered crop recommendation
+  from the trained Random Forest model.
+</p>
+
+<div class="card">
+  <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Soil &amp; Climate Inputs</div>
+  <p class="text-muted" style="margin-bottom:20px;font-size:13px;">
+    All 7 fields are required. Use the example buttons below to pre-fill demo values.
+  </p>
+
+  <!-- Input grid — built dynamically by crop.js -->
+  <div id="crop-form" class="form-grid"></div>
+
+  <!-- Example loaders -->
+  <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;">
+    <span style="font-size:12px;color:var(--text-3);align-self:center;">Load example:</span>
+    {% for crop in example_crops %}
+    <button class="btn btn-outline" style="padding:5px 12px;font-size:12px;"
+            onclick="loadExample('{{ crop }}')">{{ crop|capfirst }}</button>
+    {% endfor %}
+  </div>
+
+  <hr class="divider">
+
+  <div style="display:flex;align-items:center;gap:16px;">
+    <button class="btn btn-primary" id="predict-btn" onclick="predictCrop()">
+      ⚡ Analyse &amp; Recommend
+    </button>
+    <button class="btn btn-outline" onclick="clearForm()">Clear</button>
+    <div class="loader" id="crop-loader"></div>
+    <span id="error-msg" style="color:var(--red);font-size:13px;"></span>
+  </div>
+
+  <!-- Result box -->
+  <div class="result-box" id="result-box">
+    <div class="result-label">Best Crop for Your Conditions</div>
+    <div class="result-value" id="result-crop">—</div>
+    <div class="result-meta" id="result-conf"></div>
+    <hr class="divider">
+    <div class="card-title">Top 3 Alternatives</div>
+    <div class="pill-row" id="top3-pills"></div>
+    <hr class="divider">
+    <button class="btn btn-outline" style="font-size:13px;"
+            onclick="window.location.href='{% url "agribot" %}'">
+      🤖 Ask AgriBot for more advice
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Inject Django URL so crop.js can call the API without hardcoding paths -->
+<script>
+  const CROP_PREDICT_URL = "{% url 'api_crop_predict' %}";
+</script>
+<script src="{% static 'js/crop.js' %}"></script>
+{% endblock %}

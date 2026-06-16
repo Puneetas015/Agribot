@@ -1,0 +1,262 @@
+{% extends "core/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- ── Stat cards ─────────────────────────────────────────── -->
+<div class="grid-4" style="margin-bottom:28px;">
+
+  <div class="card card-sm">
+    <div class="card-title">Crop Analyses</div>
+    <div class="stat-value">{{ crop_count }}</div>
+    <span class="stat-badge badge-green">Module 1</span>
+  </div>
+
+  <div class="card card-sm">
+    <div class="card-title">Disease Scans</div>
+    <div class="stat-value">{{ disease_count }}</div>
+    <span class="stat-badge badge-amber">Module 2</span>
+  </div>
+
+  <div class="card card-sm">
+    <div class="card-title">Chat Queries</div>
+    <div class="stat-value">{{ chat_count }}</div>
+    <span class="stat-badge badge-blue">Module 3</span>
+  </div>
+
+  <div class="card card-sm">
+    <div class="card-title">Models Loaded</div>
+    <div class="stat-value" id="model-count">—</div>
+    <span class="stat-badge badge-green" id="model-status">checking…</span>
+  </div>
+
+</div>
+
+<!-- ── Module cards ───────────────────────────────────────── -->
+<div class="grid-2" style="margin-bottom:28px;">
+
+  <!-- Crop Recommendation -->
+  <div class="card" style="border-left: 3px solid var(--green);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <div style="font-size:22px;margin-bottom:4px;">🌾</div>
+        <div style="font-size:16px;font-weight:700;">Crop Advisor</div>
+        <div class="text-muted">Random Forest · 7 inputs</div>
+      </div>
+      <span class="stat-badge badge-green">RF Model</span>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:16px;">
+      Enter N, P, K, temperature, humidity, pH, and rainfall to receive the optimal crop
+      recommendation with confidence scores.
+    </p>
+    <a href="{% url 'crop' %}" class="btn btn-primary" style="text-decoration:none;">
+      Open Crop Advisor →
+    </a>
+  </div>
+
+  <!-- Disease Detection -->
+  <div class="card" style="border-left: 3px solid var(--amber);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <div style="font-size:22px;margin-bottom:4px;">🔬</div>
+        <div style="font-size:16px;font-weight:700;">Disease Scanner</div>
+        <div class="text-muted">Vision Transformer · 38 classes</div>
+      </div>
+      <span class="stat-badge badge-amber">CNN Model</span>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:16px;">
+      Upload a leaf image for instant AI disease diagnosis using a fine-tuned CNN
+      trained on the PlantVillage dataset.
+    </p>
+    <a href="{% url 'disease' %}" class="btn btn-primary" style="background:var(--amber);text-decoration:none;">
+      Open Scanner →
+    </a>
+  </div>
+
+  <!-- AgriBot Chat -->
+  <div class="card" style="border-left: 3px solid var(--blue);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <div style="font-size:22px;margin-bottom:4px;">🤖</div>
+        <div style="font-size:16px;font-weight:700;">AgriBot Chat</div>
+        <div class="text-muted">Llama 3.2-Vision · Ollama</div>
+      </div>
+      <span class="stat-badge badge-blue">LLM</span>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:16px;">
+      Get remedy advice, organic treatment options, and prevention strategies through
+      a conversational AI powered by a local LLM.
+    </p>
+    <a href="{% url 'agribot' %}" class="btn btn-primary" style="background:var(--blue);text-decoration:none;">
+      Open AgriBot →
+    </a>
+  </div>
+
+  <!-- System status -->
+  <div class="card" style="border-left: 3px solid var(--text-3);">
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px;">⚙️ System Status</div>
+    <div id="status-list" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="status-row" id="s-rf">
+        <span style="font-size:13px;color:var(--text-2);">Crop RF Model</span>
+        <span class="stat-badge" id="s-rf-badge">checking…</span>
+      </div>
+      <div class="status-row" id="s-cnn">
+        <span style="font-size:13px;color:var(--text-2);">Disease CNN Model</span>
+        <span class="stat-badge" id="s-cnn-badge">checking…</span>
+      </div>
+      <div class="status-row" id="s-ollama">
+        <span style="font-size:13px;color:var(--text-2);">Ollama Server</span>
+        <span class="stat-badge" id="s-ollama-badge">checking…</span>
+      </div>
+      <div class="status-row" id="s-db">
+        <span style="font-size:13px;color:var(--text-2);">Database</span>
+        <span class="stat-badge badge-green" id="s-db-badge">online</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Recent activity ────────────────────────────────────── -->
+<div class="grid-2">
+
+  <!-- Recent crop predictions -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="section-header" style="font-size:15px;margin-bottom:0;">Recent Crop Analyses</div>
+      <a href="{% url 'crop_history' %}" style="font-size:12px;color:var(--green);text-decoration:none;">View all →</a>
+    </div>
+    {% if recent_crops %}
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr>
+          <th style="text-align:left;color:var(--text-3);font-weight:500;padding:0 0 8px;border-bottom:1px solid var(--border);">Crop</th>
+          <th style="text-align:right;color:var(--text-3);font-weight:500;padding:0 0 8px;border-bottom:1px solid var(--border);">Confidence</th>
+          <th style="text-align:right;color:var(--text-3);font-weight:500;padding:0 0 8px;border-bottom:1px solid var(--border);">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in recent_crops %}
+        <tr>
+          <td style="padding:9px 0;border-bottom:1px solid var(--border);color:var(--text-1);font-weight:500;">
+            {{ p.predicted_crop|capfirst }}
+          </td>
+          <td style="padding:9px 0;border-bottom:1px solid var(--border);text-align:right;">
+            <span class="stat-badge badge-green">{{ p.confidence_score|floatformat:1 }}%</span>
+          </td>
+          <td style="padding:9px 0;border-bottom:1px solid var(--border);color:var(--text-3);text-align:right;">
+            {{ p.created_at|date:"M d, H:i" }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted" style="margin-top:12px;">No crop analyses yet. <a href="{% url 'crop' %}" style="color:var(--green);">Run your first →</a></p>
+    {% endif %}
+  </div>
+
+  <!-- Recent disease detections -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="section-header" style="font-size:15px;margin-bottom:0;">Recent Disease Scans</div>
+      <a href="{% url 'disease_history' %}" style="font-size:12px;color:var(--amber);text-decoration:none;">View all →</a>
+    </div>
+    {% if recent_diseases %}
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr>
+          <th style="text-align:left;color:var(--text-3);font-weight:500;padding:0 0 8px;border-bottom:1px solid var(--border);">Plant / Disease</th>
+          <th style="text-align:right;color:var(--text-3);font-weight:500;padding:0 0 8px;border-bottom:1px solid var(--border);">Status</th>
+          <th style="text-align:right;color:var(--text-3);font-weight:500;padding:0 0 8px;border-bottom:1px solid var(--border);">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in recent_diseases %}
+        <tr>
+          <td style="padding:9px 0;border-bottom:1px solid var(--border);">
+            <div style="color:var(--text-1);font-weight:500;">{{ p.plant_name }}</div>
+            <div style="color:var(--text-3);font-size:12px;">{{ p.disease_name }}</div>
+          </td>
+          <td style="padding:9px 0;border-bottom:1px solid var(--border);text-align:right;">
+            {% if p.is_healthy %}
+              <span class="stat-badge badge-green">Healthy</span>
+            {% else %}
+              <span class="stat-badge badge-amber">Diseased</span>
+            {% endif %}
+          </td>
+          <td style="padding:9px 0;border-bottom:1px solid var(--border);color:var(--text-3);text-align:right;">
+            {{ p.created_at|date:"M d, H:i" }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted" style="margin-top:12px;">No disease scans yet. <a href="{% url 'disease' %}" style="color:var(--amber);">Scan a leaf →</a></p>
+    {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Check model health via API
+async function checkStatus() {
+  // RF + CNN: try a dummy crop predict and catch gracefully
+  try {
+    const r = await fetch("{% url 'api_crop_predict' %}", {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','X-CSRFToken': getCookie('csrftoken')},
+      body: JSON.stringify({N:0,P:0,K:0,temperature:0,humidity:0,ph:0,rainfall:0})
+    });
+    const d = await r.json();
+    const isRfOk = r.ok || (d.error && !d.error.includes('not loaded'));
+    setBadge('s-rf-badge', isRfOk ? 'online' : 'offline', isRfOk ? 'badge-green' : 'badge-red');
+  } catch { setBadge('s-rf-badge','offline','badge-red'); }
+
+  // Ollama (reuse base status)
+  const ollamaEl = document.getElementById('ollama-status');
+  setTimeout(() => {
+    const status = ollamaEl?.textContent || 'unknown';
+    setBadge('s-ollama-badge', status,
+      status === 'online' ? 'badge-green' : 'badge-red');
+  }, 2000);
+
+  // CNN status: attempt disease endpoint without file (expected 400, not 503)
+  try {
+    const fd = new FormData();
+    const r = await fetch("{% url 'api_disease_predict' %}", {method:'POST', body: fd});
+    const isCnnOk = r.status !== 503;
+    setBadge('s-cnn-badge', isCnnOk ? 'online' : 'offline', isCnnOk ? 'badge-green' : 'badge-red');
+  } catch { setBadge('s-cnn-badge','offline','badge-red'); }
+
+  // Count loaded models
+  const rfOk  = document.getElementById('s-rf-badge').textContent  === 'online';
+  const cnnOk = document.getElementById('s-cnn-badge').textContent === 'online';
+  document.getElementById('model-count').textContent  = `${(rfOk?1:0)+(cnnOk?1:0)}/2`;
+  document.getElementById('model-status').textContent = (rfOk && cnnOk) ? 'All ready' : 'Check logs';
+  document.getElementById('model-status').className   = `stat-badge ${(rfOk && cnnOk) ? 'badge-green' : 'badge-amber'}`;
+}
+
+function setBadge(id, text, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className   = `stat-badge ${cls}`;
+}
+
+function getCookie(name) {
+  const val = `; ${document.cookie}`;
+  const parts = val.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// Run status checks after page load
+window.addEventListener('load', () => setTimeout(checkStatus, 800));
+</script>
+{% endblock %}
