@@ -1,0 +1,8 @@
+venv/ 
+plantvillage-dataset.zip 
+core/ml_models/ 
+media/ 
+__pycache__/ 
+*.pyc 
+*.h5 
+*.pth 
