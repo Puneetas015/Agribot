@@ -1,0 +1,17 @@
+# ── Core ──────────────────────────────────────────────────────
+Django>=4.2,<5.0
+Pillow>=10.0              # image handling
+requests>=2.31            # Ollama HTTP calls
+
+# ── ML: Module 1 (Crop Recommendation) ───────────────────────
+scikit-learn>=1.3
+joblib>=1.3
+numpy>=1.24
+pandas>=2.0
+
+# ── ML: Module 2 (Disease Detection) ─────────────────────────
+tensorflow>=2.13          # includes Keras; use tensorflow-cpu for no-GPU
+# tensorflow-cpu>=2.13    # ← uncomment if no NVIDIA GPU available
+
+# ── Development helpers ────────────────────────────────────────
+python-dotenv>=1.0        # load .env for settings
