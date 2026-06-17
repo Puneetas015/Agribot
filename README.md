@@ -15,19 +15,19 @@ Built entirely using **Django**, **TensorFlow**, **Scikit-Learn**, and **Ollama*
 
 ### 📊 Central Dashboard
 The central command hub provides a macro view of system analytics, real-time inference counters, loaded models, and historical logs at a glance.
-![AgriBot Dashboard](fig_dashboard.png)
+![AgriBot Dashboard](media/fig_dashboard.png)
 
 ### 🌾 Module 1: Crop Recommendation Advisor
 Utilizes an optimized Random Forest architecture processing 7 distinct soil and climatic parameters to recommend the most viable crop with precise confidence percentages.
-![Crop Advisor Interface](fig_crop.png)
+![Crop Advisor Interface](media/fig_crop.png)
 
 ### 🔬 Module 2: Neural Plant Disease Scanner
 Powered by a deep Convolutional Neural Network (CNN) trained on the PlantVillage dataset. It screens for 38 distinct health classes across multiple plant species, delivering instant diagnostic breakdowns.
-![Disease Scanner Interface](fig_disease.png)
+![Disease Scanner Interface](media/fig_disease.png)
 
 ### 🤖 Module 3: AgriBot Chat — Remedy Advisor
 An interactive, local conversational agent utilizing advanced Vision-LLMs to assist users with organic remedies, soil amendment strategies, and historical scan contextualization.
-![AgriBot Chat Interface](fig_chat.png)
+![AgriBot Chat Interface](media/fig_chat.png)
 
 ---
 
